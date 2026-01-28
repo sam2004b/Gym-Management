@@ -1,4 +1,5 @@
 using gymbackend.Data;
+using gymbackend.Models;
 using gymbackend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +64,32 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    if (!context.Users.Any(u => u.Role == "Admin"))
+    {
+       context.Users.Add(new User
+        {
+          FullName = "System Admin",
+          Email = "admin@gym.com",
+          PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+          Role = "admin",
+          PhoneNumber = "0000000000",
+          BirthDate = DateTime.UtcNow,
+          Address = "System",
+          IsApproved = true,
+          IsActive = true,
+           CreatedAt = DateTime.UtcNow
+        
+        });
+
+
+        context.SaveChanges();
+    }
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();

@@ -55,5 +55,21 @@ namespace gymbackend.Controllers
             await _authService.UpdateProfile(userId, dto);
             return Ok("Profile updated");
         }
+
+        [Authorize(Roles = "admin")]
+        [HttpPut("admin/approve-trainer/{id}")]
+        public async Task<IActionResult> ApproveTrainer(Guid id)
+        {
+            await _authService.ApproveTrainer(id);
+            return Ok("Trainer approved");
+        }
+
+        [Authorize]
+        [HttpGet("trainers")]
+        public async Task<IActionResult> GetTrainers()
+        {
+            var trainers = await _authService.GetApprovedTrainers();
+            return Ok(trainers);
+        }
     }
 }

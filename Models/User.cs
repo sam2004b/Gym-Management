@@ -16,13 +16,19 @@ namespace gymbackend.Models
         public string PasswordHash { get; set; }
 
         [Required]
-        public string Role { get; set; } 
+        public string Role { get; set; }
 
+        [Required]
         public string PhoneNumber { get; set; }
+
         public DateTime BirthDate { get; set; }
+
         public string Address { get; set; }
 
         public bool IsActive { get; set; } = true;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public bool IsApproved { get; set; } = false;
     }
 }

@@ -25,15 +25,18 @@ namespace gymbackend.Services
             if (await _context.Users.AnyAsync(x => x.Email == dto.Email))
                 throw new Exception("Email already exists");
 
+            var role = dto.Role.Trim().ToLower();
+
             var user = new User
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = dto.Role,
+                Role = role,
                 PhoneNumber = dto.PhoneNumber,
-                BirthDate = dto.BirthDate,
-                Address = dto.Address
+                BirthDate = DateTime.SpecifyKind(dto.BirthDate, DateTimeKind.Utc),
+                Address = dto.Address,
+                IsApproved = role == "trainer" ? false : true
             };
 
             _context.Users.Add(user);
@@ -49,6 +52,9 @@ namespace gymbackend.Services
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 throw new Exception("Invalid credentials");
+
+            if (user.Role == "trainer" && !user.IsApproved)
+                throw new Exception("Trainer account not approved yet");
 
             return GenerateToken(user);
         }
@@ -67,6 +73,31 @@ namespace gymbackend.Services
             user.Address = dto.Address;
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task ApproveTrainer(Guid trainerId)
+        {
+            var trainer = await _context.Users
+                .FirstOrDefaultAsync(x => x.Id == trainerId && x.Role == "trainer");
+
+            if (trainer == null)
+                throw new Exception("Trainer not found");
+
+            trainer.IsApproved = true;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<TrainerListDto>> GetApprovedTrainers()
+        {
+            return await _context.Users
+                .Where(x => x.Role == "trainer" && x.IsApproved)
+                .Select(x => new TrainerListDto
+                {
+                    Id = x.Id,
+                    FullName = x.FullName,
+                    Email = x.Email
+                })
+                .ToListAsync();
         }
 
         private string GenerateToken(User user)
