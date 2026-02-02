@@ -90,7 +90,7 @@ namespace gymbackend.Services
         public async Task<List<TrainerListDto>> GetApprovedTrainers()
         {
             return await _context.Users
-                .Where(x => x.Role == "trainer" && x.IsApproved)
+                .Where(x => x.Role == "trainer" && x.IsApproved && x.IsActive)
                 .Select(x => new TrainerListDto
                 {
                     Id = x.Id,
@@ -98,6 +98,17 @@ namespace gymbackend.Services
                     Email = x.Email
                 })
                 .ToListAsync();
+        }
+
+        public async Task DeleteUser(Guid userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+            if (user == null)
+                throw new Exception("User not found");
+
+            user.IsActive = false;
+            await _context.SaveChangesAsync();
         }
 
         private string GenerateToken(User user)
