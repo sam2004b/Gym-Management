@@ -79,5 +79,13 @@ namespace gymbackend.Controllers
             await _authService.DeleteUser(id);
             return Ok("User deleted successfully");
         }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("admin/users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _authService.GetAllUsers();
+            return Ok(users);
+        }
     }
 }

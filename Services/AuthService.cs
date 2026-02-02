@@ -111,6 +111,22 @@ namespace gymbackend.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<AdminUserListDto>> GetAllUsers()
+        {
+            return await _context.Users
+                .Select(x => new AdminUserListDto
+                {
+                    Id = x.Id,
+                    FullName = x.FullName,
+                    Email = x.Email,
+                    Role = x.Role,
+                    IsActive = x.IsActive,
+                    IsApproved = x.IsApproved,
+                    CreatedAt = x.CreatedAt
+                })
+                .ToListAsync();
+        }
+
         private string GenerateToken(User user)
         {
             var claims = new[]

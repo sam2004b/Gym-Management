@@ -12,5 +12,6 @@ namespace gymbackend.Services
         Task ApproveTrainer(Guid trainerId);
         Task<List<TrainerListDto>> GetApprovedTrainers();
         Task DeleteUser(Guid userId);
+        Task<List<AdminUserListDto>> GetAllUsers();
     }
 }
