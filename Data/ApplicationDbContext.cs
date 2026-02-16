@@ -9,5 +9,7 @@ namespace gymbackend.Data
             : base(options) { }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Membership> Memberships { get; set; }
+
     }
 }
