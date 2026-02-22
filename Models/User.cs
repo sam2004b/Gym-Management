@@ -30,5 +30,7 @@ namespace gymbackend.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsApproved { get; set; } = false;
+
+        public Guid? SelectedTrainerId { get; set; }
     }
 }
