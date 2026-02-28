@@ -13,6 +13,7 @@ namespace gymbackend.Data
         public DbSet<WorkoutPlan> WorkoutPlans { get; set; }
         public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
         public DbSet<WorkoutAssignment> WorkoutAssignments { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
     }
 }

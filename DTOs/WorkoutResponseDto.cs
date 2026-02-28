@@ -11,4 +11,4 @@ namespace gymbackend.DTOs
     public int DurationInWeeks { get; set; }
     public List<WorkoutExerciseDto>? Exercises { get; set; }
 }
-}
+} 
