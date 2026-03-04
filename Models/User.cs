@@ -32,5 +32,6 @@ namespace gymbackend.Models
         public bool IsApproved { get; set; } = false;
 
         public Guid? SelectedTrainerId { get; set; }
+        public ICollection<Notification> Notifications { get; set; }
     }
 }

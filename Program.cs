@@ -1,42 +1,78 @@
 using gymbackend.Data;
 using gymbackend.Models;
 using gymbackend.Services;
+using gymbackend.Hubs;
+using gymbackend.BackgroundServices;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+
 using Stripe;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMembershipService, MembershipService>();
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<NotificationService>(); 
+
+
+builder.Services.AddSignalR();
+
+builder.Services.AddHostedService<MembershipReminderService>();
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/notificationHub"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
+
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
             )
         };
     });
 
+
 builder.Services.AddAuthorization();
+
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -66,9 +102,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+
 builder.Services.AddControllers();
 
+
 var app = builder.Build();
+
 
 using (var scope = app.Services.CreateScope())
 {
@@ -76,25 +115,24 @@ using (var scope = app.Services.CreateScope())
 
     if (!context.Users.Any(u => u.Role == "Admin"))
     {
-       context.Users.Add(new User
+        context.Users.Add(new User
         {
-          FullName = "System Admin",
-          Email = "admin@gym.com",
-          PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-          Role = "admin",
-          PhoneNumber = "0000000000",
-          BirthDate = DateTime.UtcNow,
-          Address = "System",
-          IsApproved = true,
-          IsActive = true,
-           CreatedAt = DateTime.UtcNow
-        
+            FullName = "System Admin",
+            Email = "admin@gym.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+            Role = "Admin",
+            PhoneNumber = "0000000000",
+            BirthDate = DateTime.UtcNow,
+            Address = "System",
+            IsApproved = true,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
         });
-
 
         context.SaveChanges();
     }
 }
+
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -103,4 +141,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
+
+
 app.Run();

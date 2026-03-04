@@ -14,6 +14,8 @@ namespace gymbackend.Data
         public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
         public DbSet<WorkoutAssignment> WorkoutAssignments { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<WorkoutSession> WorkoutSessions { get; set; }
 
     }
 }
