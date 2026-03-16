@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gymbackend.Data;
@@ -11,9 +12,11 @@ using gymbackend.Data;
 namespace gymbackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260312092942_AddAttendance")]
+    partial class AddAttendance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,57 +42,6 @@ namespace gymbackend.Migrations
                     b.HasIndex("MemberId");
 
                     b.ToTable("Attendances");
-                });
-
-            modelBuilder.Entity("gymbackend.Models.ClassBooking", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("BookedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ClassId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("MemberId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ClassBookings");
-                });
-
-            modelBuilder.Entity("gymbackend.Models.ClassSchedule", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Capacity")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ClassName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Day")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<TimeSpan>("Time")
-                        .HasColumnType("interval");
-
-                    b.Property<Guid>("TrainerId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ClassSchedules");
                 });
 
             modelBuilder.Entity("gymbackend.Models.Membership", b =>

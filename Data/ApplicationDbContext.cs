@@ -16,6 +16,9 @@ namespace gymbackend.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<WorkoutSession> WorkoutSessions { get; set; }
+        public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<ClassSchedule> ClassSchedules { get; set; }
+        public DbSet<ClassBooking> ClassBookings { get; set; }
 
     }
 }
