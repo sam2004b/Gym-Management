@@ -4,4 +4,5 @@ public class SavePaymentDto
     public string Method { get; set; }
     public string Status { get; set; }
     public string Plan { get; set; }
+    public decimal Amount { get; set; } 
 }

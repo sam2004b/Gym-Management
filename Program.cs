@@ -24,6 +24,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<MembershipReminderService>();
@@ -110,6 +111,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddHttpContextAccessor();
+ 
 builder.Services.AddControllers();
 
 var app = builder.Build();

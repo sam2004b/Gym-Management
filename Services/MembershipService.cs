@@ -24,6 +24,24 @@ namespace gymbackend.Services
             };
         }
 
+        public async Task<List<MembershipResponseDto>> GetUserSubscriptions(Guid userId)
+        {
+            var memberships = await _context.Memberships
+                .Where(m => m.UserId == userId && m.IsActive)
+                .OrderByDescending(m => m.StartDate)
+                .ToListAsync();
+
+            return memberships.Select(m => new MembershipResponseDto
+            {
+                UserId = m.UserId,
+                SubscriptionType = m.SubscriptionType,
+                StartDate = m.StartDate,
+                ExpiryDate = m.ExpiryDate,
+                IsActive = m.ExpiryDate > DateTime.UtcNow,
+                Price = GetPrice(m.SubscriptionType) 
+            }).ToList();
+        }
+
         public async Task<MembershipResponseDto> PurchaseOrRenewMembership(Guid userId, string subscriptionType)
         {
             subscriptionType = subscriptionType.Trim().ToLower();
@@ -45,6 +63,7 @@ namespace gymbackend.Services
             {
                 startDate = existingMembership.ExpiryDate;
                 existingMembership.ExpiryDate = existingMembership.ExpiryDate.AddMonths(monthsToAdd);
+
                 await _context.SaveChangesAsync();
 
                 return new MembershipResponseDto
@@ -53,7 +72,8 @@ namespace gymbackend.Services
                     SubscriptionType = existingMembership.SubscriptionType,
                     StartDate = existingMembership.StartDate,
                     ExpiryDate = existingMembership.ExpiryDate,
-                    IsActive = true
+                    IsActive = true,
+                    Price = GetPrice(existingMembership.SubscriptionType)
                 };
             }
 
@@ -75,7 +95,8 @@ namespace gymbackend.Services
                 SubscriptionType = subscriptionType,
                 StartDate = membership.StartDate,
                 ExpiryDate = membership.ExpiryDate,
-                IsActive = true
+                IsActive = true,
+                Price = GetPrice(subscriptionType)
             };
         }
 
@@ -89,9 +110,21 @@ namespace gymbackend.Services
                     SubscriptionType = x.SubscriptionType,
                     StartDate = x.StartDate,
                     ExpiryDate = x.ExpiryDate,
-                    IsActive = x.IsActive
+                    IsActive = x.IsActive,
+                    Price = GetPrice(x.SubscriptionType)
                 })
                 .ToListAsync();
+        }
+
+        private decimal GetPrice(string type)
+        {
+            return type.ToLower() switch
+            {
+                "monthly" => 49.99m,
+                "quarterly" => 129.99m,
+                "yearly" => 449.99m,
+                _ => 0
+            };
         }
     }
 }

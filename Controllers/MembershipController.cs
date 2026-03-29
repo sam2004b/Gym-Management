@@ -16,11 +16,16 @@ namespace gymbackend.Controllers
         {
             _membershipService = membershipService;
         }
-
+        
+        [Authorize]
         [HttpGet("subscriptions")]
-        public IActionResult GetSubscriptionTypes()
+        public async Task<IActionResult> GetUserSubscriptions()
         {
-            return Ok(_membershipService.GetSubscriptionTypes());
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var subs = await _membershipService.GetUserSubscriptions(userId);
+
+            return Ok(subs);
         }
 
         [Authorize]
@@ -28,7 +33,10 @@ namespace gymbackend.Controllers
         public async Task<IActionResult> PurchaseMembership(PurchaseMembershipDto dto)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var result = await _membershipService.PurchaseOrRenewMembership(userId, dto.SubscriptionType);
+
+            var result = await _membershipService
+                .PurchaseOrRenewMembership(userId, dto.SubscriptionType);
+
             return Ok(result);
         }
 
@@ -40,4 +48,4 @@ namespace gymbackend.Controllers
             return Ok(memberships);
         }
     }
-}
+} 

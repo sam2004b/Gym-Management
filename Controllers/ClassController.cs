@@ -17,7 +17,7 @@ namespace gymbackend.Controllers
             _service = service;
         }
 
-        [Authorize(Roles = "trainer")]
+        [Authorize(Roles = "Trainer")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateClass(CreateClassDto dto)
         {
@@ -28,7 +28,7 @@ namespace gymbackend.Controllers
             return Ok("Class created");
         }
 
-        [Authorize(Roles = "trainer")]
+        [Authorize(Roles = "Trainer")]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteClass(Guid id)
         {
@@ -39,15 +39,15 @@ namespace gymbackend.Controllers
             return Ok("Class deleted");
         }
 
-        [Authorize(Roles = "trainer")]
+        [Authorize(Roles = "Trainer")]
         [HttpGet("my-classes")]
         public async Task<IActionResult> GetMyClasses()
         {
-              var trainerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var trainerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-              var classes = await _service.GetTrainerClasses(trainerId);
+            var classes = await _service.GetTrainerClasses(trainerId);
 
-              return Ok(classes);
+            return Ok(classes);
         }
 
         [Authorize(Roles = "Member")]
@@ -68,6 +68,17 @@ namespace gymbackend.Controllers
             await _service.BookClass(memberId, dto);
 
             return Ok("Class booked successfully");
+        }
+
+        [Authorize(Roles = "Member")]
+        [HttpGet("my")]
+        public async Task<IActionResult> GetMyBookedClasses()
+        {
+            var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var classes = await _service.GetMemberBookedClasses(memberId);
+
+            return Ok(classes);
         }
     }
 }

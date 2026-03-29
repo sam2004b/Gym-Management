@@ -7,5 +7,7 @@ namespace gymbackend.DTOs
         public DateTime StartDate { get; set; }
         public DateTime ExpiryDate { get; set; }
         public bool IsActive { get; set; }
+        public decimal Price { get; set; }
     }
 }
+ 

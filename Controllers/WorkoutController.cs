@@ -44,7 +44,7 @@ namespace gymbackend.Controllers
             return Ok(workouts);
         }
 
-        [Authorize(Roles = "member")]
+        [Authorize(Roles = "Member")]
         [HttpGet("my-workout")]
         public async Task<IActionResult> GetMemberWorkout()
         {

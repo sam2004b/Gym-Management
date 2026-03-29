@@ -64,4 +64,12 @@ public class PaymentController : ControllerBase
 
         return Ok(response);
     }
+
+        [Authorize(Roles = "admin")]
+        [HttpGet("admin/all")]
+        public async Task<IActionResult> GetAllPaymentsForAdmin()
+    {
+       var payments = await _paymentService.GetAllPaymentsAsync();
+       return Ok(payments);
+    }
 }

@@ -3,17 +3,31 @@ using gymbackend.DTOs;
 using gymbackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 public class PaymentService : IPaymentService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public PaymentService(ApplicationDbContext context)
+    public PaymentService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    // ✅ CREATE PAYMENT INTENT (Stripe)
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = _httpContextAccessor.HttpContext?
+            .User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null)
+            throw new Exception("User not authenticated");
+
+        return Guid.Parse(userIdClaim);
+    }
+
     public async Task<string> CreatePaymentIntentAsync(CreatePaymentDto dto)
     {
         var options = new PaymentIntentCreateOptions
@@ -26,16 +40,17 @@ public class PaymentService : IPaymentService
         var service = new PaymentIntentService();
         var intent = await service.CreateAsync(options);
 
-        // ✅ FIX: Add default values for Method & Plan
+        var userId = GetCurrentUserId();
+
         var payment = new Payment
         {
             Id = Guid.NewGuid(),
-            UserId = dto.UserId,
-            Amount = dto.Amount,
+            UserId = userId,
+            Amount = dto.Amount, 
             StripePaymentIntentId = intent.Id,
             Status = "Pending",
-            Method = "Pending",   // ✅ FIXED
-            Plan = "Pending",     // ✅ FIXED
+            Method = "Pending",
+            Plan = "Pending",
             CreatedAt = DateTime.UtcNow
         };
 
@@ -45,23 +60,44 @@ public class PaymentService : IPaymentService
         return intent.ClientSecret;
     }
 
-    // ✅ UPDATE PAYMENT AFTER SUCCESS
     public async Task UpdatePaymentAsync(SavePaymentDto dto)
     {
         var payment = await _context.Payments
             .FirstOrDefaultAsync(p => p.StripePaymentIntentId == dto.PaymentIntentId);
 
         if (payment == null)
-            throw new Exception("Payment not found");
+        {
+            
+            var userId = GetCurrentUserId();
 
-        payment.Status = dto.Status;
-        payment.Method = dto.Method;
-        payment.Plan = dto.Plan;
+            payment = new Payment
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                StripePaymentIntentId = dto.PaymentIntentId,
+                Amount = dto.Amount, 
+                Status = dto.Status,
+                Method = dto.Method,
+                Plan = dto.Plan,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Payments.Add(payment);
+        }
+        else
+        {
+          
+            payment.Status = dto.Status;
+            payment.Method = dto.Method;
+            payment.Plan = dto.Plan;
+
+            if (dto.Amount > 0)
+                payment.Amount = dto.Amount;
+        }
 
         await _context.SaveChangesAsync();
     }
 
-    // ✅ GET PAYMENTS FOR USER
     public async Task<List<Payment>> GetPaymentsByUserAsync(Guid userId)
     {
         return await _context.Payments
@@ -69,4 +105,12 @@ public class PaymentService : IPaymentService
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
-}
+
+
+    public async Task<List<Payment>> GetAllPaymentsAsync()
+    {
+        return await _context.Payments
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+} 

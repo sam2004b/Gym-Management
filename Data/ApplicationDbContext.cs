@@ -19,6 +19,6 @@ namespace gymbackend.Data
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<ClassSchedule> ClassSchedules { get; set; }
         public DbSet<ClassBooking> ClassBookings { get; set; }
-
+        public DbSet<Feedback> Feedbacks { get; set; }
     }
 }

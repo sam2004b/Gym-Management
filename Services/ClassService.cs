@@ -55,7 +55,21 @@ namespace gymbackend.Services
                 .Where(x => x.IsActive)
                 .ToListAsync();
         }
-        
+           
+        public async Task<List<object>> GetMemberBookedClasses(Guid memberId)
+       {
+              return await (
+               from cb in _context.ClassBookings
+               join c in _context.ClassSchedules on cb.ClassId equals c.Id
+               where cb.MemberId == memberId
+               select new
+            {
+               id = c.Id,
+               name = c.ClassName   
+            }
+                ).ToListAsync<object>();
+        }
+
         public async Task BookClass(Guid memberId, BookClassDto dto)
         {
             var classSchedule = await _context.ClassSchedules
@@ -66,7 +80,7 @@ namespace gymbackend.Services
 
             var bookingsCount = await _context.ClassBookings
                 .CountAsync(x => x.ClassId == dto.ClassId);
-
+ 
             if (bookingsCount >= classSchedule.Capacity)
                 throw new Exception("Class is full");
 
