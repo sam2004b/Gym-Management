@@ -48,4 +48,4 @@ namespace gymbackend.Controllers
             return Ok(memberships);
         }
     }
-} 
+}

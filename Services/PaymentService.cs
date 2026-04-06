@@ -46,7 +46,7 @@ public class PaymentService : IPaymentService
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            Amount = dto.Amount, 
+            Amount = dto.Amount,
             StripePaymentIntentId = intent.Id,
             Status = "Pending",
             Method = "Pending",
@@ -67,7 +67,6 @@ public class PaymentService : IPaymentService
 
         if (payment == null)
         {
-            
             var userId = GetCurrentUserId();
 
             payment = new Payment
@@ -75,7 +74,7 @@ public class PaymentService : IPaymentService
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 StripePaymentIntentId = dto.PaymentIntentId,
-                Amount = dto.Amount, 
+                Amount = dto.Amount,
                 Status = dto.Status,
                 Method = dto.Method,
                 Plan = dto.Plan,
@@ -86,7 +85,6 @@ public class PaymentService : IPaymentService
         }
         else
         {
-          
             payment.Status = dto.Status;
             payment.Method = dto.Method;
             payment.Plan = dto.Plan;
@@ -106,11 +104,31 @@ public class PaymentService : IPaymentService
             .ToListAsync();
     }
 
-
     public async Task<List<Payment>> GetAllPaymentsAsync()
     {
         return await _context.Payments
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
-} 
+
+    public async Task<List<object>> GetAllPaymentsWithUsersAsync()
+    {
+        return await (
+            from p in _context.Payments
+            join u in _context.Users on p.UserId equals u.Id
+            orderby p.CreatedAt descending
+            select new
+            {
+                id = p.Id,
+                userId = p.UserId,
+                userName = u.FullName,
+                amount = p.Amount,
+                method = p.Method,
+                status = p.Status,
+                plan = p.Plan,
+                createdAt = p.CreatedAt,
+                stripePaymentIntentId = p.StripePaymentIntentId
+            }
+        ).ToListAsync<object>();
+    }
+}

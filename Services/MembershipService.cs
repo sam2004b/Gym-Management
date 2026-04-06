@@ -23,7 +23,6 @@ namespace gymbackend.Services
                 "yearly"
             };
         }
-
         public async Task<List<MembershipResponseDto>> GetUserSubscriptions(Guid userId)
         {
             var memberships = await _context.Memberships
@@ -38,7 +37,7 @@ namespace gymbackend.Services
                 StartDate = m.StartDate,
                 ExpiryDate = m.ExpiryDate,
                 IsActive = m.ExpiryDate > DateTime.UtcNow,
-                Price = GetPrice(m.SubscriptionType) 
+                Price = GetPrice(m.SubscriptionType)
             }).ToList();
         }
 
@@ -102,18 +101,19 @@ namespace gymbackend.Services
 
         public async Task<List<MembershipResponseDto>> GetAllMemberships()
         {
-            return await _context.Memberships
+            var memberships = await _context.Memberships
                 .Include(x => x.User)
-                .Select(x => new MembershipResponseDto
-                {
-                    UserId = x.UserId,
-                    SubscriptionType = x.SubscriptionType,
-                    StartDate = x.StartDate,
-                    ExpiryDate = x.ExpiryDate,
-                    IsActive = x.IsActive,
-                    Price = GetPrice(x.SubscriptionType)
-                })
-                .ToListAsync();
+                .ToListAsync(); 
+
+            return memberships.Select(x => new MembershipResponseDto
+            {
+                UserId = x.UserId,
+                SubscriptionType = x.SubscriptionType,
+                StartDate = x.StartDate,
+                ExpiryDate = x.ExpiryDate,
+                IsActive = x.IsActive,
+                Price = GetPrice(x.SubscriptionType)
+            }).ToList();
         }
 
         private decimal GetPrice(string type)

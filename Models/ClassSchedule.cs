@@ -8,11 +8,15 @@ namespace gymbackend.Models
 
         public Guid TrainerId { get; set; }
 
+        public User Trainer { get; set; }
+
         public string Day { get; set; }
 
         public TimeSpan Time { get; set; }
 
         public int Capacity { get; set; }
+
+        public string Description { get; set; }
 
         public bool IsActive { get; set; } = true;
     }

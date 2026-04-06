@@ -17,29 +17,32 @@ namespace gymbackend.Controllers
             _service = service;
         }
 
-        [Authorize(Roles = "Trainer")]
+      
+        [Authorize(Roles = "trainer,admin")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateClass(CreateClassDto dto)
         {
-            var trainerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            await _service.CreateClass(trainerId, dto);
+            await _service.CreateClass(userId, dto);
 
             return Ok("Class created");
         }
 
-        [Authorize(Roles = "Trainer")]
+
+        [Authorize(Roles = "trainer,admin")]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteClass(Guid id)
         {
-            var trainerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            await _service.DeleteClass(trainerId, id);
+            await _service.DeleteClass(userId, id);
 
             return Ok("Class deleted");
         }
 
-        [Authorize(Roles = "Trainer")]
+ 
+        [Authorize(Roles = "trainer")]
         [HttpGet("my-classes")]
         public async Task<IActionResult> GetMyClasses()
         {
@@ -50,7 +53,8 @@ namespace gymbackend.Controllers
             return Ok(classes);
         }
 
-        [Authorize(Roles = "Member")]
+
+        [Authorize(Roles = "member,admin")]
         [HttpGet]
         public async Task<IActionResult> GetClasses()
         {
@@ -59,7 +63,8 @@ namespace gymbackend.Controllers
             return Ok(classes);
         }
 
-        [Authorize(Roles = "Member")]
+       
+        [Authorize(Roles = "member,admin")]
         [HttpPost("book")]
         public async Task<IActionResult> BookClass(BookClassDto dto)
         {
@@ -70,7 +75,8 @@ namespace gymbackend.Controllers
             return Ok("Class booked successfully");
         }
 
-        [Authorize(Roles = "Member")]
+
+        [Authorize(Roles = "member")]
         [HttpGet("my")]
         public async Task<IActionResult> GetMyBookedClasses()
         {

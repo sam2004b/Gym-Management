@@ -5,14 +5,16 @@ namespace gymbackend.Services
 {
     public interface IClassService
     {
-        Task CreateClass(Guid trainerId, CreateClassDto dto);
+        Task CreateClass(Guid userId, CreateClassDto dto);
 
-        Task DeleteClass(Guid trainerId, Guid classId);
+        Task DeleteClass(Guid userId, Guid classId);
 
-        Task<List<ClassSchedule>> GetAvailableClasses();
+        Task<List<object>> GetAvailableClasses();
 
         Task BookClass(Guid memberId, BookClassDto dto);
+
         Task<List<ClassSchedule>> GetTrainerClasses(Guid trainerId);
+
         Task<List<object>> GetMemberBookedClasses(Guid memberId);
     }
 }

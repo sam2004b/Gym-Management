@@ -15,7 +15,7 @@ public class FeedbackController : ControllerBase
         _service = service;
     }
 
-    [Authorize(Roles = "Member")]
+    [Authorize(Roles = "member")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateFeedbackDto dto)
     {
@@ -24,7 +24,7 @@ public class FeedbackController : ControllerBase
         return Ok("Feedback submitted");
     }
 
-    [Authorize(Roles = "Member")]
+    [Authorize(Roles = "member")]
     [HttpGet("my")]
     public async Task<IActionResult> GetMy()
     {

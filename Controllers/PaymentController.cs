@@ -15,7 +15,6 @@ public class PaymentController : ControllerBase
         _paymentService = paymentService;
     }
 
-    // ✅ EXISTING - CREATE STRIPE PAYMENT INTENT
     [HttpPost("create-payment-intent")]
     public async Task<IActionResult> CreatePaymentIntent([FromBody] CreatePaymentDto dto)
     {
@@ -23,7 +22,6 @@ public class PaymentController : ControllerBase
         return Ok(new { clientSecret });
     }
 
-    // ✅ 1. SAVE PAYMENT (UPDATE AFTER STRIPE SUCCESS)
     [HttpPost("save")]
     public async Task<IActionResult> SavePayment([FromBody] SavePaymentDto dto)
     {
@@ -38,8 +36,7 @@ public class PaymentController : ControllerBase
         });
     }
 
-    // ✅ 2. GET PAYMENT HISTORY (FOR LOGGED-IN USER)
-    [Authorize] // remove if you are not using authentication yet
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetPayments()
     {
@@ -65,11 +62,11 @@ public class PaymentController : ControllerBase
         return Ok(response);
     }
 
-        [Authorize(Roles = "admin")]
-        [HttpGet("admin/all")]
-        public async Task<IActionResult> GetAllPaymentsForAdmin()
+    [Authorize(Roles = "admin")]
+    [HttpGet("admin/all")]
+    public async Task<IActionResult> GetAllPaymentsForAdmin()
     {
-       var payments = await _paymentService.GetAllPaymentsAsync();
-       return Ok(payments);
+        var payments = await _paymentService.GetAllPaymentsWithUsersAsync();
+        return Ok(payments);
     }
 }
