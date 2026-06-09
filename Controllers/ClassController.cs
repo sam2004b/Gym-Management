@@ -17,7 +17,6 @@ namespace gymbackend.Controllers
             _service = service;
         }
 
-      
         [Authorize(Roles = "trainer,admin")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateClass(CreateClassDto dto)
@@ -28,7 +27,6 @@ namespace gymbackend.Controllers
 
             return Ok("Class created");
         }
-
 
         [Authorize(Roles = "trainer,admin")]
         [HttpDelete("delete/{id}")]
@@ -41,7 +39,6 @@ namespace gymbackend.Controllers
             return Ok("Class deleted");
         }
 
- 
         [Authorize(Roles = "trainer")]
         [HttpGet("my-classes")]
         public async Task<IActionResult> GetMyClasses()
@@ -53,7 +50,6 @@ namespace gymbackend.Controllers
             return Ok(classes);
         }
 
-
         [Authorize(Roles = "member,admin")]
         [HttpGet]
         public async Task<IActionResult> GetClasses()
@@ -63,7 +59,6 @@ namespace gymbackend.Controllers
             return Ok(classes);
         }
 
-       
         [Authorize(Roles = "member,admin")]
         [HttpPost("book")]
         public async Task<IActionResult> BookClass(BookClassDto dto)
@@ -75,7 +70,6 @@ namespace gymbackend.Controllers
             return Ok("Class booked successfully");
         }
 
-
         [Authorize(Roles = "member")]
         [HttpGet("my")]
         public async Task<IActionResult> GetMyBookedClasses()
@@ -85,6 +79,28 @@ namespace gymbackend.Controllers
             var classes = await _service.GetMemberBookedClasses(memberId);
 
             return Ok(classes);
+        }
+
+        [Authorize(Roles = "member")]
+        [HttpDelete("cancel/{classId}")]
+        public async Task<IActionResult> CancelBooking(Guid classId)
+        {
+            var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            await _service.CancelBooking(memberId, classId);
+
+            return Ok("Booking cancelled");
+        }
+
+        [Authorize(Roles = "trainer")]
+        [HttpGet("trainer/members")]
+        public async Task<IActionResult> GetTrainerMembers()
+        {
+            var trainerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var members = await _service.GetTrainerMembers(trainerId);
+
+            return Ok(members);
         }
     }
 }

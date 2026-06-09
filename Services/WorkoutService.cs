@@ -8,11 +8,15 @@ namespace gymbackend.Services
     public class WorkoutService : IWorkoutService
     {
         private readonly ApplicationDbContext _context;
+        private readonly NotificationService _notificationService;
 
-        public WorkoutService(ApplicationDbContext context)
+         public WorkoutService(
+           ApplicationDbContext context,
+           NotificationService notificationService)
         {
-            _context = context;
-        }
+          _context = context;
+          _notificationService = notificationService;
+         }
 
         public async Task<Guid> CreateWorkout(Guid trainerId, CreateWorkoutDto dto)
         {
@@ -48,19 +52,22 @@ namespace gymbackend.Services
         public async Task AssignWorkout(Guid trainerId, AssignWorkoutDto dto)
         {
             var member = await _context.Users
-                .FirstOrDefaultAsync(x => x.Id == dto.MemberId && x.SelectedTrainerId == trainerId);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == dto.MemberId &&
+                    x.SelectedTrainerId == trainerId);
 
             if (member == null)
                 throw new Exception("Trainer not assigned to this member");
 
             var workoutPlan = await _context.WorkoutPlans
                 .Include(x => x.Exercises)
-                .FirstOrDefaultAsync(x => x.Id == dto.WorkoutPlanId && x.IsActive);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == dto.WorkoutPlanId &&
+                    x.IsActive);
 
             if (workoutPlan == null)
                 throw new Exception("Workout plan not found");
 
-            // Create assignment
             _context.WorkoutAssignments.Add(new WorkoutAssignment
             {
                 WorkoutPlanId = dto.WorkoutPlanId,
@@ -70,19 +77,22 @@ namespace gymbackend.Services
                 IsActive = true
             });
 
-            // Start generating sessions
             var startDate = DateTime.UtcNow.Date;
 
             foreach (var exercise in workoutPlan.Exercises)
             {
-                var dayOfWeek = Enum.Parse<DayOfWeek>(exercise.Day);
+                if (!Enum.TryParse<DayOfWeek>(exercise.Day, true, out var dayOfWeek))
+                    throw new Exception($"Invalid day value: {exercise.Day}");
 
                 for (int week = 0; week < workoutPlan.DurationInWeeks; week++)
                 {
-                    var sessionDate = GetNextDateForDay(startDate.AddDays(week * 7), dayOfWeek);
+                    var sessionDate = GetNextDateForDay(
+                        startDate.AddDays(week * 7),
+                        dayOfWeek
+                    );
 
-                    var startTime = sessionDate.AddHours(10); // default 10 AM
-                    var endTime = startTime.AddHours(1); // 1 hour session
+                    var startTime = sessionDate.AddHours(10);
+                    var endTime = startTime.AddHours(1);
 
                     _context.WorkoutSessions.Add(new WorkoutSession
                     {
@@ -97,7 +107,14 @@ namespace gymbackend.Services
                 }
             }
 
-            await _context.SaveChangesAsync();
+               await _context.SaveChangesAsync();
+
+             await _notificationService.CreateNotification(
+             dto.MemberId,
+                "Workout Assigned",
+                "Your trainer assigned a new workout plan.",
+                "workout"
+              );
         }
 
         public async Task<WorkoutResponseDto?> GetMemberWorkout(Guid memberId)
@@ -110,7 +127,7 @@ namespace gymbackend.Services
             if (assignment == null)
                 return null;
 
-            var workout = await _context.WorkoutPlans
+            return await _context.WorkoutPlans
                 .Where(x => x.Id == assignment.WorkoutPlanId && x.IsActive)
                 .Select(x => new WorkoutResponseDto
                 {
@@ -127,8 +144,6 @@ namespace gymbackend.Services
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
-
-            return workout;
         }
 
         public async Task<List<WorkoutResponseDto>> GetTrainerWorkouts(Guid trainerId)
@@ -155,7 +170,10 @@ namespace gymbackend.Services
         public async Task UpdateWorkout(Guid trainerId, Guid workoutId, UpdateWorkoutDto dto)
         {
             var workout = await _context.WorkoutPlans
-                .FirstOrDefaultAsync(x => x.Id == workoutId && x.TrainerId == trainerId && x.IsActive);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == workoutId &&
+                    x.TrainerId == trainerId &&
+                    x.IsActive);
 
             if (workout == null)
                 throw new Exception("Workout not found");
@@ -167,10 +185,29 @@ namespace gymbackend.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<TrainerMemberDto>> GetMyMembers(Guid trainerId)
+        {
+            return await _context.Users
+                .Where(u =>
+                    u.Role == "member" &&
+                    u.SelectedTrainerId == trainerId &&
+                    u.IsActive)
+                .Select(u => new TrainerMemberDto
+                {
+                    Id = u.Id,
+                    FullName = u.FullName,
+                    Email = u.Email
+                })
+                .ToListAsync();
+        }
+
         public async Task DeleteWorkout(Guid trainerId, Guid workoutId)
         {
             var workout = await _context.WorkoutPlans
-                .FirstOrDefaultAsync(x => x.Id == workoutId && x.TrainerId == trainerId && x.IsActive);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == workoutId &&
+                    x.TrainerId == trainerId &&
+                    x.IsActive);
 
             if (workout == null)
                 throw new Exception("Workout not found");

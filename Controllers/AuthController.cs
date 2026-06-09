@@ -72,6 +72,33 @@ namespace gymbackend.Controllers
             return Ok(trainers);
         }
 
+        // ✅ NEW API: MEMBER SELECT TRAINER
+        [Authorize(Roles = "member")]
+        [HttpPost("select-trainer")]
+        public async Task<IActionResult> SelectTrainer([FromBody] SelectTrainerDto dto)
+        {
+            try
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+                await _authService.SelectTrainer(userId, dto.TrainerId);
+
+                return Ok(new { message = "Trainer selected successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [Authorize(Roles = "trainer,admin")]
+        [HttpGet("members")]
+        public async Task<IActionResult> GetMembers()
+        {
+            var members = await _authService.GetAllMembers();
+            return Ok(members);
+        }
+
         [Authorize(Roles = "admin")]
         [HttpDelete("admin/delete-user/{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)

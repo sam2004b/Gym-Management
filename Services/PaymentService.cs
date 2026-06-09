@@ -1,6 +1,7 @@
 using gymbackend.Data;
 using gymbackend.DTOs;
 using gymbackend.Models;
+using gymbackend.Services;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 using System.Security.Claims;
@@ -8,14 +9,19 @@ using Microsoft.AspNetCore.Http;
 
 public class PaymentService : IPaymentService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+      private readonly ApplicationDbContext _context;
+      private readonly IHttpContextAccessor _httpContextAccessor;
+      private readonly NotificationService _notificationService;
 
-    public PaymentService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
-    {
+      public PaymentService(
+         ApplicationDbContext context,
+         IHttpContextAccessor httpContextAccessor,
+         NotificationService notificationService)
+      {
         _context = context;
         _httpContextAccessor = httpContextAccessor;
-    }
+        _notificationService = notificationService;
+      }
 
     private Guid GetCurrentUserId()
     {
@@ -94,6 +100,17 @@ public class PaymentService : IPaymentService
         }
 
         await _context.SaveChangesAsync();
+
+        if (dto.Status?.ToLower() == "succeeded" ||
+         dto.Status?.ToLower() == "success")
+       {
+         await _notificationService.CreateNotification(
+           payment.UserId,
+          "Payment Successful",
+          $"Your payment for {payment.Plan} has been processed successfully.",
+          "payment"
+          );
+       }
     }
 
     public async Task<List<Payment>> GetPaymentsByUserAsync(Guid userId)

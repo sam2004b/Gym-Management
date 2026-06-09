@@ -44,7 +44,7 @@ namespace gymbackend.Controllers
             return Ok(workouts);
         }
 
-        [Authorize(Roles = "Member")]
+        [Authorize(Roles = "Member,member")]
         [HttpGet("my-workout")]
         public async Task<IActionResult> GetMemberWorkout()
         {
@@ -70,5 +70,16 @@ namespace gymbackend.Controllers
             await _service.DeleteWorkout(trainerId, id);
             return Ok("Workout deleted");
         }
+        
+        [Authorize(Roles = "trainer")]
+        [HttpGet("my-members")]
+         public async Task<IActionResult> GetMyMembers()
+         {
+             var trainerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+             var members = await _service.GetMyMembers(trainerId);
+
+               return Ok(members);
+         }
     }
 }

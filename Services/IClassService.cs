@@ -16,5 +16,9 @@ namespace gymbackend.Services
         Task<List<ClassSchedule>> GetTrainerClasses(Guid trainerId);
 
         Task<List<object>> GetMemberBookedClasses(Guid memberId);
+
+        Task<List<object>> GetTrainerMembers(Guid trainerId);
+
+        Task CancelBooking(Guid memberId, Guid classId);
     }
 }
