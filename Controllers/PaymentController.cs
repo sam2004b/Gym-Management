@@ -1,0 +1,72 @@
+using gymbackend.DTOs;
+using gymbackend.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+[Route("api/[controller]")]
+[ApiController]
+public class PaymentController : ControllerBase
+{
+    private readonly IPaymentService _paymentService;
+
+    public PaymentController(IPaymentService paymentService)
+    {
+        _paymentService = paymentService;
+    }
+
+    [HttpPost("create-payment-intent")]
+    public async Task<IActionResult> CreatePaymentIntent([FromBody] CreatePaymentDto dto)
+    {
+        var clientSecret = await _paymentService.CreatePaymentIntentAsync(dto);
+        return Ok(new { clientSecret });
+    }
+
+    [HttpPost("save")]
+    public async Task<IActionResult> SavePayment([FromBody] SavePaymentDto dto)
+    {
+        if (dto == null || string.IsNullOrEmpty(dto.PaymentIntentId))
+            return BadRequest("Invalid payment data");
+
+        await _paymentService.UpdatePaymentAsync(dto);
+
+        return Ok(new
+        {
+            message = "Payment saved successfully"
+        });
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetPayments()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim == null)
+            return Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim);
+
+        var payments = await _paymentService.GetPaymentsByUserAsync(userId);
+
+        var response = payments.Select(p => new
+        {
+            id = $"RCP-{p.CreatedAt.Year}-{p.Id.ToString().Substring(0, 6)}",
+            amount = p.Amount,
+            method = p.Method,
+            status = p.Status,
+            plan = p.Plan,
+            createdAt = p.CreatedAt
+        });
+
+        return Ok(response);
+    }
+
+    [Authorize(Roles = "admin")]
+    [HttpGet("admin/all")]
+    public async Task<IActionResult> GetAllPaymentsForAdmin()
+    {
+        var payments = await _paymentService.GetAllPaymentsWithUsersAsync();
+        return Ok(payments);
+    }
+}
