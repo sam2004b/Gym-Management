@@ -15,26 +15,33 @@ namespace gymbackend.Services
         }
 
         public async Task CheckIn(Guid memberId)
-        {
-            var today = DateTime.UtcNow.Date;
+{
+    // Check if member has an active membership
+    var hasMembership = await _context.Memberships
+        .AnyAsync(m => m.UserId == memberId && m.IsActive);
 
-            var alreadyChecked = await _context.Attendances
-                .AnyAsync(a => a.MemberId == memberId && a.CheckInTime.Date == today);
+    if (!hasMembership)
+        throw new Exception("No active membership.");
 
-            if (alreadyChecked)
-                throw new Exception("Attendance already marked today.");
+    var today = DateTime.UtcNow.Date;
 
-            var attendance = new Attendance
-            {
-                Id = Guid.NewGuid(),
-                MemberId = memberId,
-                CheckInTime = DateTime.UtcNow
-            };
+    var alreadyChecked = await _context.Attendances
+        .AnyAsync(a => a.MemberId == memberId && a.CheckInTime.Date == today);
 
-            _context.Attendances.Add(attendance);
+    if (alreadyChecked)
+        throw new Exception("Attendance already marked today.");
 
-            await _context.SaveChangesAsync();
-        }
+    var attendance = new Attendance
+    {
+        Id = Guid.NewGuid(),
+        MemberId = memberId,
+        CheckInTime = DateTime.UtcNow
+    };
+
+    _context.Attendances.Add(attendance);
+
+    await _context.SaveChangesAsync();
+}
 
         public async Task<List<AttendanceResponseDto>> GetMyAttendance(Guid memberId)
         {
